@@ -1,0 +1,56 @@
+[
+  {
+    "product_id": "abc123",
+    "product_url": "converse.com/products/abc123",
+    "collection": "Classic Chuck",
+    "gender": "Womens",
+    "category": "Sneakers",
+    "price": 50,
+    "name": "Classic Chuck"
+  },
+  {
+    "product_id": "abc456",
+    "product_url": "converse.com/products/abc456",
+    "collection": "Chuck 70s",
+    "gender": "Womens",
+    "category": "Sneakers",
+    "price": 150,
+    "name": "Chuck 70"
+  },
+  {
+    "product_id": "abc789",
+    "product_url": "converse.com/products/abc789",
+    "collection": "Elevation",
+    "gender": "Womens",
+    "category": "Sneakers",
+    "price": 200,
+    "name": "Chuck Platform"
+  },
+  {
+    "product_id": "def123",
+    "product_url": "converse.com/products/def123",
+    "collection": "One Star",
+    "gender": "Mens/Unisex",
+    "category": "Sneakers",
+    "price": 200,
+    "name": "Heart Of the City One Star Pro"
+  },
+  {
+    "product_id": "def456",
+    "product_url": "converse.com/products/def456",
+    "collection": "One Star",
+    "gender": "Mens/Unisex",
+    "category": "Sneakers",
+    "price": 200,
+    "name": "Louie Lopez Pro"
+  },
+  {
+    "product_id": "def789",
+    "product_url": "converse.com/products/def789",
+    "collection": "One Star",
+    "gender": "Mens/Unisex",
+    "category": "Sneakers",
+    "price": 200,
+    "name": "One Star Pro"
+  }
+]
