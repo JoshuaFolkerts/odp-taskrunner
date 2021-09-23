@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 
 namespace ODP.Services
 {
-    public class TransportService : ITransportService
+    public interface IContentGeneratorService
     {
+        List<Customer> GenerateCustomers(int count);
     }
 }

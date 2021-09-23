@@ -33,6 +33,9 @@
     <None Update="data\customers.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="data\misc-events.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="data\products.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

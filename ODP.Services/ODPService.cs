@@ -23,18 +23,20 @@ namespace ODP.Services
             _restClient.AddDefaultHeader("Authorization", _options.Value.RestAuthToken);
         }
 
-        public async Task<ODPResponse> CreateCustomers(List<ODPRoot> data)
+        public async Task<ODPResponse> CreateCustomers(string apiKey, List<Customer> data)
         {
             var request = new RestRequest("/{apiVersion}/profiles", Method.POST)
+                .AddHeader("x-api-key", apiKey)
                 .AddUrlSegment("apiVersion", this._options.Value.RestBaseVersion)
                 .AddJsonBody(data);
 
             return await _restClient.PostAsync<ODPResponse>(request);
         }
 
-        public async Task<ODPResponse> CreateProducts(List<Product> data)
+        public async Task<ODPResponse> CreateProducts(string apiKey, List<Product> data)
         {
             var request = new RestRequest("/{apiVersion}/objects/products", Method.POST)
+                .AddHeader("x-api-key", apiKey)
                 .AddUrlSegment("apiVersion", this._options.Value.RestBaseVersion)
                 .AddJsonBody(data);
 
@@ -47,7 +49,7 @@ namespace ODP.Services
         /// <param name="productId"></param>
         /// <param name="fields"></param>
         /// <returns></returns>
-        public async Task<ODPResponse> CreateProducts(string productId, Dictionary<string, string> fields)
+        public async Task<ODPResponse> CreateProducts(string apiKey, string productId, Dictionary<string, string> fields)
         {
             Dictionary<string, string> requestFields = new();
             requestFields.Add("product_id", productId);
@@ -64,15 +66,17 @@ namespace ODP.Services
             requestData.Add(fields);
 
             var request = new RestRequest("/{apiVersion}/objects/products", Method.POST)
+                .AddHeader("x-api-key", apiKey)
                 .AddUrlSegment("apiVersion", this._options.Value.RestBaseVersion)
                 .AddJsonBody(requestData);
 
             return await _restClient.PostAsync<ODPResponse>(request);
         }
 
-        public async Task<ODPResponse> CreateEvents(List<ODPRoot> data)
+        public async Task<ODPResponse> CreateEvents(string apiKey, List<ODPRoot> data)
         {
             var request = new RestRequest("/{apiVersion}/events", Method.POST)
+                .AddHeader("x-api-key", apiKey)
                 .AddUrlSegment("apiVersion", this._options.Value.RestBaseVersion)
                 .AddJsonBody(data);
 
