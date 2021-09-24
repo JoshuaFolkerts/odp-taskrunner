@@ -23,6 +23,9 @@ namespace ODP.Services.Models
         [JsonProperty("discount")]
         public double Discount { get; set; }
 
+        [JsonProperty("coupon_code")]
+        public string CouponCode { get; set; }
+
         [JsonProperty("items")]
         public List<Item> Items { get; set; } = new();
     }

@@ -15,5 +15,8 @@ namespace ODP.Services.Models
 
         [JsonProperty("subtotal")]
         public double Subtotal { get; set; }
+
+        [JsonProperty("discount")]
+        public double Discount { get; set; }
     }
 }

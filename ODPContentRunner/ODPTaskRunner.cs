@@ -24,7 +24,9 @@ namespace ODPContentRunner
 
         private string email = string.Empty;
 
-        private string journey = "0";
+        private int journey = 0;
+
+        private int counter = 1;
 
         public ODPTaskRunner(IODPService odpService, IContentGeneratorService contentGeneratorService, IJourneyGenerator journeyGenerator)
         {
@@ -54,13 +56,17 @@ namespace ODPContentRunner
             }
 
             Console.WriteLine("Product Type");
+            Console.WriteLine("0 - Journey Only");
             Console.WriteLine("1 = \"Content Cloud\"");
             Console.WriteLine("2 = \"Content Cloud and Commerce\"");
-            Console.Write("Choose Product Type option: (ie. 1 or 2): ");
+            Console.Write("Choose Product Type option: (ie. 0): ");
             var productTypes = Console.ReadLine();
 
-            Console.Write($"Number of events or customers to generate (1-200): ");
-            var counter = Convert.ToInt32(Console.ReadLine());
+            if (productTypes != "0")
+            {
+                Console.Write($"Number of events or customers to generate (1-200): ");
+                counter = Convert.ToInt32(Console.ReadLine());
+            }
 
             Console.WriteLine("Journey Types:");
             Console.WriteLine("0 - No Journey");
@@ -70,11 +76,17 @@ namespace ODPContentRunner
             Console.WriteLine("4 - Commerce / Experiment / Form / Add To Cart / Triggered Email / Purchase: ");
             Console.Write("Enter Journey Type: ");
             var selectedJourney = Console.ReadLine();
+
             if (!string.IsNullOrWhiteSpace(selectedJourney))
             {
-                journey = selectedJourney;
+                if (!int.TryParse(selectedJourney, out journey))
+                {
+                    Console.WriteLine("Please select a value 0, 1, 2, 3, 4");
+                    Console.ReadLine();
+                }
             }
-            if (journey != "0")
+
+            if (journey != 0)
             {
                 Console.WriteLine($"Enter your email address (used for journey): ");
                 var enteredEmail = Console.ReadLine();
@@ -85,34 +97,39 @@ namespace ODPContentRunner
             }
             if (!string.IsNullOrEmpty(apiKey) && appDefaultStartDateTime < DateTime.Now && !string.IsNullOrWhiteSpace(productTypes))
             {
+                // Get customers
+                var customers = await this.contentGeneratorService.GenerateCustomers(counter);
+
                 // Get products and randomize them
                 var products = JsonConvert.DeserializeObject<List<Product>>(await ReadJsonFile(Directory.GetCurrentDirectory() + @"\data\clothing-products.json"))
                     .OrderBy(x => Guid.NewGuid())
                     .ToList();
 
-                // Get customers
-                var customers = await this.contentGeneratorService.GenerateCustomers(counter);
-
                 // Get urls for products
-                var paths = products.Where(x => !string.IsNullOrWhiteSpace(x.ProductUrl)).Select(x => StringHelper.GetUrlPath(x.ProductUrl));
+                var paths = products
+                    .Where(x => !string.IsNullOrWhiteSpace(x.ProductUrl))
+                    .Select(x => StringHelper.GetUrlPath(x.ProductUrl));
+
+                if (journey > 0 && !string.IsNullOrWhiteSpace(email))
+                {
+                    var customerResponse = await this.odpService.CreateCustomers(apiKey, customers);
+                    WriteErrors(customerResponse, $"Saving customers: {customerResponse.Status} - {customerResponse.Title}");
+                }
 
                 // Push Customers
-                var customerResponse = await this.odpService.CreateCustomers(apiKey, customers);
-                Console.WriteLine($"Saving customers: {customerResponse.Status} - {customerResponse.Title}");
-                WriteErrors(customerResponse);
-
                 if (productTypes == "2")
                 {
                     var productResponse = await this.odpService.CreateProducts(apiKey, products.Take(counter).ToList());
-                    Console.WriteLine($"Saving products: {productResponse.Status} - {productResponse.Title}");
-                    WriteErrors(productResponse);
+                    WriteErrors(productResponse, $"Saving products: {productResponse.Status} - {productResponse.Title}");
                 }
 
-                if (journey != "0")
+                // Push Journey
+                if (journey > 0)
                 {
                     var customer = customers.FirstOrDefault();
                     await CreateJourneys(customer);
                 }
+
                 Console.WriteLine("Import Completed: Press any key to stop");
                 Console.ReadKey();
             }
@@ -151,23 +168,26 @@ namespace ODPContentRunner
                 var journeyEvents = new List<ODPGeneric>();
                 switch (journey)
                 {
-                    case "1":
+                    case 1:
+                        journeyEvents = this.journeyGenerator.GenerateAssociationCMSScript(customer, appDefaultStartDateTime);
+                        break;
+
+                    case 2:
                         journeyEvents = this.journeyGenerator.GenerateCMSScript(customer, appDefaultStartDateTime);
                         break;
 
-                    case "2":
+                    case 3:
+                        journeyEvents = this.journeyGenerator.GenerateCommerceMultiDayScript(customer, appDefaultStartDateTime);
                         break;
 
-                    case "3":
-                        break;
-
-                    case "4":
+                    case 4:
+                        journeyEvents = this.journeyGenerator.GenerateCommerceScript(customer, appDefaultStartDateTime);
                         break;
                 }
                 if (journeyEvents.Any())
                 {
                     var journeyResponse = await this.odpService.CreateEvents(apiKey, journeyEvents);
-                    WriteErrors(journeyResponse);
+                    WriteErrors(journeyResponse, "Imported Journey Completed");
                 }
             }
             else
@@ -186,7 +206,7 @@ namespace ODPContentRunner
             return json;
         }
 
-        private void WriteErrors(ODPResponse response)
+        private void WriteErrors(ODPResponse response, string successMessage = "")
         {
             if (response.Details != null && response.Details.Invalids.Any())
             {
@@ -195,6 +215,10 @@ namespace ODPContentRunner
                 {
                     Console.WriteLine(detail.ToString(), red);
                 }
+            }
+            else if (!string.IsNullOrWhiteSpace(successMessage))
+            {
+                Console.WriteLine(successMessage);
             }
         }
     }
