@@ -52,10 +52,12 @@ namespace ODP.Services.NamesGenerator
         /// <returns>The random name as a string</returns>
         public Person Generate(Sex sex, int middle = 0, bool isInital = false)
         {
-            var person = new Person();
-
-            person.FirstName = sex == Sex.Male ? male[rand.Next(male.Count)] : female[rand.Next(female.Count)]; // determines if we should select a name from male or female, and randomly picks
-            person.LastName = this.last[rand.Next(this.last.Count)]; // gets the last name
+            var person = new Person
+            {
+                FirstName = sex == Sex.Male ? male[rand.Next(male.Count)] : female[rand.Next(female.Count)], // determines if we should select a name from male or female, and randomly picks
+                LastName = this.last[rand.Next(this.last.Count)], // gets the last name
+                Gender = sex == Sex.Male ? "M" : "F"
+            };
 
             List<string> middles = new();
 

@@ -13,5 +13,7 @@ namespace ODP.Services.NamesGenerator
         public string LastName { get; set; }
 
         public List<string> MiddleName { get; set; } = new();
+
+        public string Gender { get; set; }
     }
 }

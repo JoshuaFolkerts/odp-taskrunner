@@ -1,38 +1,25 @@
 ﻿using Newtonsoft.Json;
+using ODP.Services.Helpers;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ODP.Services.Models
 {
     public class Data
     {
-        [JsonConstructor]
-        public Data(
-            [JsonProperty("page")] string page,
-            [JsonProperty("ts")] int ts,
-            [JsonProperty("product_id")] string productId,
-            [JsonProperty("order")] Order order
-        )
-        {
-            this.Page = page;
-            this.Ts = ts;
-            this.ProductId = productId;
-            this.Order = order;
-        }
-
         [JsonProperty("page")]
-        public string Page { get; }
+        public string Page { get; set; }
+
+        [JsonProperty("title", NullValueHandling = NullValueHandling.Ignore)]
+        public string Title { get; set; }
 
         [JsonProperty("ts")]
-        public int Ts { get; }
+        [JsonConverter(typeof(JsonUnixTimeConverter))]
+        public DateTime Time { get; set; }
 
-        [JsonProperty("product_id")]
-        public string ProductId { get; }
+        [JsonProperty("product_id", NullValueHandling = NullValueHandling.Ignore)]
+        public string ProductId { get; set; }
 
-        [JsonProperty("order")]
-        public Order Order { get; }
+        [JsonProperty("order", NullValueHandling = NullValueHandling.Ignore)]
+        public Order Order { get; set; }
     }
 }

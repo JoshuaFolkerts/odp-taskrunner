@@ -1,28 +1,23 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ODP.Services.Models
 {
-    public class Identifiers
+    public class Identifier
     {
-        [JsonConstructor]
-        public Identifiers(
-            [JsonProperty("vuid")] string vuid,
-            [JsonProperty("email")] string email
-        )
+        [JsonProperty("vuid", NullValueHandling = NullValueHandling.Ignore)]
+        public string Vuid { get; set; }
+
+        [JsonProperty("email", NullValueHandling = NullValueHandling.Ignore)]
+        public string Email { get; set; }
+
+        public static Identifier AddVuid(string vuid) => new()
         {
-            this.Vuid = vuid;
-            this.Email = email;
-        }
+            Vuid = vuid
+        };
 
-        [JsonProperty("vuid")]
-        public string Vuid { get; }
-
-        [JsonProperty("email")]
-        public string Email { get; }
+        public static Identifier AddEmail(string email) => new()
+        {
+            Email = email
+        };
     }
 }

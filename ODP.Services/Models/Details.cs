@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace ODP.Services.Models
 {
-    public class Details
+    public class Invalid
     {
         [JsonProperty("invalids")]
-        public List<object> Invalids { get; set; }
+        public List<object> Invalids { get; set; } = new();
     }
 }

@@ -15,6 +15,6 @@ namespace ODP.Services.Models
         public DateTime Timestamp { get; set; }
 
         [JsonProperty("detail")]
-        public Details Details { get; set; }
+        public Invalid Details { get; set; }
     }
 }

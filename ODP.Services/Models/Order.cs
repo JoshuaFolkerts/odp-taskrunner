@@ -1,48 +1,29 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ODP.Services.Models
 {
     public class Order
     {
-        [JsonConstructor]
-        public Order(
-            [JsonProperty("order_id")] string orderId,
-            [JsonProperty("subtotal")] int subtotal,
-            [JsonProperty("tax")] double tax,
-            [JsonProperty("shipping")] double shipping,
-            [JsonProperty("total")] double total,
-            [JsonProperty("items")] List<Item> items
-        )
-        {
-            this.OrderId = orderId;
-            this.Subtotal = subtotal;
-            this.Tax = tax;
-            this.Shipping = shipping;
-            this.Total = total;
-            this.Items = items;
-        }
-
         [JsonProperty("order_id")]
-        public string OrderId { get; }
+        public string OrderId { get; set; }
 
         [JsonProperty("subtotal")]
-        public int Subtotal { get; }
+        public double Subtotal { get; set; }
 
         [JsonProperty("tax")]
-        public double Tax { get; }
+        public double Tax { get; set; }
 
         [JsonProperty("shipping")]
-        public double Shipping { get; }
+        public double Shipping { get; set; }
 
         [JsonProperty("total")]
-        public double Total { get; }
+        public double Total { get; set; }
+
+        [JsonProperty("discount")]
+        public double Discount { get; set; }
 
         [JsonProperty("items")]
-        public IReadOnlyList<Item> Items { get; }
+        public List<Item> Items { get; set; } = new();
     }
 }

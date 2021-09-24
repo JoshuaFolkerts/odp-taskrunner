@@ -1,38 +1,19 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ODP.Services.Models
 {
     public class Item
     {
-        [JsonConstructor]
-        public Item(
-            [JsonProperty("product_id")] string productId,
-            [JsonProperty("price")] int price,
-            [JsonProperty("quantity")] int quantity,
-            [JsonProperty("subtotal")] int subtotal
-        )
-        {
-            this.ProductId = productId;
-            this.Price = price;
-            this.Quantity = quantity;
-            this.Subtotal = subtotal;
-        }
-
         [JsonProperty("product_id")]
-        public string ProductId { get; }
+        public string ProductId { get; set; }
 
         [JsonProperty("price")]
-        public int Price { get; }
+        public double Price { get; set; }
 
         [JsonProperty("quantity")]
-        public int Quantity { get; }
+        public double Quantity { get; set; }
 
         [JsonProperty("subtotal")]
-        public int Subtotal { get; }
+        public double Subtotal { get; set; }
     }
 }

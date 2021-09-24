@@ -23,6 +23,16 @@ namespace ODP.Services
             _restClient.AddDefaultHeader("Authorization", _options.Value.RestAuthToken);
         }
 
+        public async Task<Customer> GetCustomer(string apiKey, string email)
+        {
+            var request = new RestRequest("/{apiVersion}/profiles", Method.GET)
+                .AddHeader("x-api-key", apiKey)
+                .AddUrlSegment("apiVersion", this._options.Value.RestBaseVersion)
+                .AddQueryParameter("email", email);
+
+            return await _restClient.GetAsync<Customer>(request);
+        }
+
         public async Task<ODPResponse> CreateCustomers(string apiKey, List<Customer> data)
         {
             var request = new RestRequest("/{apiVersion}/profiles", Method.POST)
@@ -73,7 +83,7 @@ namespace ODP.Services
             return await _restClient.PostAsync<ODPResponse>(request);
         }
 
-        public async Task<ODPResponse> CreateEvents(string apiKey, List<ODPRoot> data)
+        public async Task<ODPResponse> CreateEvents(string apiKey, List<ODPGeneric> data)
         {
             var request = new RestRequest("/{apiVersion}/events", Method.POST)
                 .AddHeader("x-api-key", apiKey)
