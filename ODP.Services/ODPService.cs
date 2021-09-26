@@ -86,9 +86,9 @@ namespace ODP.Services
         public async Task<ODPResponse> CreateEvents(string apiKey, List<ODPGeneric> data)
         {
             var request = new RestRequest("/{apiVersion}/events", Method.POST)
-                .AddHeader("x-api-key", apiKey)
-                .AddUrlSegment("apiVersion", this._options.Value.RestBaseVersion)
-                .AddJsonBody(data);
+                    .AddHeader("x-api-key", apiKey)
+                    .AddUrlSegment("apiVersion", this._options.Value.RestBaseVersion)
+                    .AddJsonBody(data);
 
             return await _restClient.PostAsync<ODPResponse>(request);
         }

@@ -34,6 +34,7 @@ namespace ODPContentRunner
             services
                 .AddSingleton<IODPService, ODPService>()
                 .AddSingleton<IContentGeneratorService, ContentGeneratorService>()
+                .AddSingleton<IRandomGenerator, RandomGenerator>()
                 .AddSingleton<IJourneyGenerator, JourneyGenerator>()
                 .AddTransient<ODPTaskRunner>();
 

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ODP.Services.Models
 {
@@ -16,5 +17,10 @@ namespace ODP.Services.Models
 
         [JsonProperty("detail")]
         public Invalid Details { get; set; }
+
+        [NotMapped]
+        [JsonIgnore]
+        public bool IsValid =>
+            this.Status !=0 &&this.Status == 202;
     }
 }

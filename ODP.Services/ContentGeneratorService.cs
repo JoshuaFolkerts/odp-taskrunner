@@ -53,7 +53,7 @@ namespace ODP.Services
             this.GeneratePageViewEvent(Identifier.AddVuid(customer.Attributes.Vuid), dateTime, url, new Data());
 
         public ODPGeneric GeneratePageViewEvent(DateTime dateTime, Customer customer, Product product) =>
-            this.GeneratePageViewEvent(Identifier.AddVuid(customer.Attributes.Vuid), dateTime, StringHelper.GetUrlPath(product.ProductUrl), new Data() { Title = product.Name });
+            this.GeneratePageViewEvent(Identifier.AddVuid(customer.Attributes.Vuid), dateTime, StringHelper.GetUrlPath(product.ProductUrl), new Data() { Title = product.Name, Page = StringHelper.GetUrlPath(product.ProductUrl) });
 
         public ODPGeneric GenerateProductEvent(Identifier identifiers, DateTime dateTime, string eventAction, string eventValue, string productId)
         {

@@ -18,6 +18,8 @@ namespace ODPContentRunner
 
         private readonly IJourneyGenerator journeyGenerator;
 
+        private readonly IRandomGenerator randomGenerator;
+
         private string apiKey = string.Empty;
 
         private DateTime appDefaultStartDateTime = DateTime.Now.AddMonths(-1);
@@ -28,11 +30,12 @@ namespace ODPContentRunner
 
         private int counter = 1;
 
-        public ODPTaskRunner(IODPService odpService, IContentGeneratorService contentGeneratorService, IJourneyGenerator journeyGenerator)
+        public ODPTaskRunner(IODPService odpService, IContentGeneratorService contentGeneratorService, IJourneyGenerator journeyGenerator, IRandomGenerator randomGenerator)
         {
             this.odpService = odpService;
             this.contentGeneratorService = contentGeneratorService;
             this.journeyGenerator = journeyGenerator;
+            this.randomGenerator = randomGenerator;
         }
 
         public async Task Run()
@@ -110,19 +113,35 @@ namespace ODPContentRunner
                     .Where(x => !string.IsNullOrWhiteSpace(x.ProductUrl))
                     .Select(x => StringHelper.GetUrlPath(x.ProductUrl));
 
-                if (journey > 0 && !string.IsNullOrWhiteSpace(email))
+                if ((journey > 0 && !string.IsNullOrWhiteSpace(email)) || productTypes != "0")
                 {
                     var customerResponse = await this.odpService.CreateCustomers(apiKey, customers);
                     WriteErrors(customerResponse, $"Saving customers: {customerResponse.Status} - {customerResponse.Title}");
                 }
 
                 // Push Customers
-                if (productTypes == "2")
+                if (productTypes != "0")
                 {
-                    var productResponse = await this.odpService.CreateProducts(apiKey, products.Take(counter).ToList());
+                    var productResponse = await this.odpService.CreateProducts(apiKey, products.ToList());
                     WriteErrors(productResponse, $"Saving products: {productResponse.Status} - {productResponse.Title}");
-                }
+                    if (productResponse.IsValid)
+                    {
+                        switch (productTypes)
+                        {
+                            case "1":
+                                var contentEvents = this.randomGenerator.ExecuteCloudContent(appDefaultStartDateTime, products, customers, counter);
+                                var eventResponse = await this.odpService.CreateEvents(apiKey, contentEvents);
+                                this.WriteErrors(eventResponse, $"Saving content events: {eventResponse.Status} - {eventResponse.Title}");
+                                break;
 
+                            case "2":
+                                var contentCommerceEvents = this.randomGenerator.ExecuteCloudAndCloundContent(appDefaultStartDateTime, products, customers, counter);
+                                var commerceEventResponse = await this.odpService.CreateEvents(apiKey, contentCommerceEvents);
+                                this.WriteErrors(commerceEventResponse, $"Saving content & commerce events: {commerceEventResponse.Status} - {commerceEventResponse.Title}");
+                                break;
+                        }
+                    }
+                }
                 // Push Journey
                 if (journey > 0)
                 {
