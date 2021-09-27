@@ -6,7 +6,7 @@ namespace ODP.Services
 {
     public interface IODPService
     {
-        Task<Customer> GetCustomer(string apiKey, string email);
+        Customer GetCustomer(string apiKey, string email);
 
         Task<ODPResponse> CreateCustomers(string apiKey, List<Customer> data);
 

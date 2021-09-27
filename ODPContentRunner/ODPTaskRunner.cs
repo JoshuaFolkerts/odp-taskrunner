@@ -26,7 +26,9 @@ namespace ODPContentRunner
 
         private string email = string.Empty;
 
-        private int journey = 0;
+        private JourneyType journeyType = 0;
+
+        private ProductType productType = 0;
 
         private int counter = 1;
 
@@ -42,65 +44,66 @@ namespace ODPContentRunner
         {
             Console.WriteLine("Api key is require in order to find the account to insert data into.");
 
-            Console.Write("Enter apikey: ");
-            apiKey = Console.ReadLine();
+            apiKey = ReadLine.Read("Enter apiKey: ");
+            Console.WriteLine();
 
-            Console.Write($"Enter Datetime - press enter for default ({appDefaultStartDateTime.ToShortDateString()}): ");
-            var dt = Console.ReadLine();
-
-            if (!string.IsNullOrWhiteSpace(dt))
+            var dt = ReadLine.Read($"Enter Datetime - press enter for default ({appDefaultStartDateTime.ToShortDateString()}): ", appDefaultStartDateTime.ToShortDateString());
+            DateTime userDateTime;
+            while (!DateTime.TryParse(dt, out userDateTime) || userDateTime > DateTime.Now.AddDays(-2))
             {
-                var userDateTime = appDefaultStartDateTime;
-                while (!DateTime.TryParse(dt, out userDateTime) || userDateTime > DateTime.Now)
-                {
-                    Console.WriteLine("Please specify a date less than current Date and Time");
-                    dt = Console.ReadLine();
-                }
+                dt = ReadLine.Read($"Enter Datetime - press enter for default ({appDefaultStartDateTime.ToShortDateString()}): ", appDefaultStartDateTime.ToShortDateString());
             }
+            appDefaultStartDateTime = userDateTime;
+            Console.WriteLine();
 
-            Console.WriteLine("Product Type");
-            Console.WriteLine("0 - Journey Only");
-            Console.WriteLine("1 = \"Content Cloud\"");
-            Console.WriteLine("2 = \"Content Cloud and Commerce\"");
-            Console.Write("Choose Product Type option: (ie. 0): ");
-            var productTypes = Console.ReadLine();
+            WriteWrappedHeader("Product Type");
+            for (int i = 0; i <= 2; i++)
+            {
+                Console.WriteLine($"{i} - {((ProductType)i).GetDescription()}");
+            }
+            var userSelectedProductType = ReadLine.Read("Choose Product Type option: (ie. 0):");
 
-            if (productTypes != "0")
+            int productType2;
+            while (!int.TryParse(userSelectedProductType, out productType2))
+            {
+                Console.Write("This is not valid input. Please enter a value 0-2: ");
+                userSelectedProductType = Console.ReadLine();
+            }
+            productType = (ProductType)productType2;
+
+            if (productType != ProductType.Journey)
             {
                 Console.Write($"Number of events or customers to generate (1-100): ");
                 counter = Convert.ToInt32(Console.ReadLine());
             }
-
-            if (productTypes == "0")
+            else
             {
-                Console.WriteLine("Journey Types:");
-                Console.WriteLine("1 - Association Script - CMS / Forms / Experiments / Email");
-                Console.WriteLine("2 - CMS / Search / Form / Experimentation / Email: ");
-                Console.WriteLine("3 - Commerce (multi-day) / Experiment / Form / Add To Cart / Triggered Email / In-store: ");
-                Console.WriteLine("4 - Commerce / Experiment / Form / Add To Cart / Triggered Email / Purchase: ");
-                Console.Write("Enter Journey Type: ");
-                var selectedJourney = Console.ReadLine();
-
-                if (!string.IsNullOrWhiteSpace(selectedJourney))
+                WriteWrappedHeader("Journey Types:");
+                for (int i = 1; i <= 4; i++)
                 {
-                    if (!int.TryParse(selectedJourney, out journey))
-                    {
-                        Console.WriteLine("Please select a value 0, 1, 2, 3, 4");
-                        Console.ReadLine();
-                    }
+                    Console.WriteLine($"{i} - {((JourneyType)i).GetDescription()}");
                 }
-
-                if (journey != 0)
+                var userSelectedJourney = ReadLine.Read("Enter Journey Type: ");
+                int userJourney2;
+                while (!int.TryParse(userSelectedJourney, out userJourney2) && userJourney2 > 4)
                 {
-                    Console.WriteLine($"Enter your email address (used for journey): ");
-                    var enteredEmail = Console.ReadLine();
+                    Console.Write("This is not valid input. Please enter a value 1-4: ");
+                    userSelectedJourney = Console.ReadLine();
+                }
+                journeyType = (JourneyType)userJourney2;
+
+                if (journeyType != 0)
+                {
+                    var enteredEmail = ReadLine.Read("Enter your email address (used for journey): ");
                     if (!string.IsNullOrWhiteSpace(enteredEmail))
                     {
                         email = enteredEmail;
                     }
                 }
+                counter = 1;
             }
-            if (!string.IsNullOrEmpty(apiKey) && appDefaultStartDateTime < DateTime.Now && !string.IsNullOrWhiteSpace(productTypes))
+
+            if (apiKey.HasValue() && appDefaultStartDateTime < DateTime.Now)
             {
                 // force max 100
                 if (counter > 100)
@@ -109,55 +112,52 @@ namespace ODPContentRunner
                 }
                 // Get customers
                 var customers = this.contentGeneratorService.GenerateCustomers(counter);
-
-                // Get products and randomize them
-                var products = JsonConvert.DeserializeObject<List<Product>>(await ReadJsonFile(Directory.GetCurrentDirectory() + @"\data\clothing-products.json"))
-                    .OrderBy(x => Guid.NewGuid())
-                    .ToList();
-
-                // Get urls for products
-                var paths = products
-                    .Where(x => !string.IsNullOrWhiteSpace(x.ProductUrl))
-                    .Select(x => StringHelper.GetUrlPath(x.ProductUrl));
-
-                if ((journey > 0 && !string.IsNullOrWhiteSpace(email)) || productTypes != "0")
+                if (productType != ProductType.Journey)
                 {
+                    // Get products and randomize them
+                    var products = JsonConvert.DeserializeObject<List<Product>>(await ReadJsonFile(Directory.GetCurrentDirectory() + @"\data\clothing-products.json"))
+                        .OrderBy(x => Guid.NewGuid())
+                        .ToList();
+
+                    // Get urls for products
+                    var paths = products
+                        .Where(x => !string.IsNullOrWhiteSpace(x.ProductUrl))
+                        .Select(x => StringHelper.GetUrlPath(x.ProductUrl));
+
+                    // Create contact for journey since we need customer;
                     var customerResponse = await this.odpService.CreateCustomers(apiKey, customers);
-                    WriteErrors(customerResponse, $"Saving customers: {customerResponse.Status} - {customerResponse.Title}");
-                }
+                    WriteErrors(customerResponse, $"Saved {counter} customers");
 
-                // Push Customers
-                if (productTypes != "0")
-                {
-                    var productResponse = await this.odpService.CreateProducts(apiKey, products.ToList());
-                    WriteErrors(productResponse, $"Saving products: {productResponse.Status} - {productResponse.Title}");
-                    if (productResponse.IsValid)
+                    // Push Customers
+                    if (productType != ProductType.Journey)
                     {
-                        switch (productTypes)
+                        var productResponse = await this.odpService.CreateProducts(apiKey, products.ToList());
+                        WriteErrors(productResponse, $"Saved {counter} products");
+                        if (productResponse.IsValid)
                         {
-                            case "1":
-                                var contentEvents = this.randomGenerator.ExecuteCloudContent(appDefaultStartDateTime, products, customers, counter);
-                                var eventResponse = await this.odpService.CreateEvents(apiKey, contentEvents);
-                                this.WriteErrors(eventResponse, $"Saving content events: {eventResponse.Status} - {eventResponse.Title}");
-                                break;
+                            switch (productType)
+                            {
+                                case ProductType.ContentCloud:
+                                    var contentEvents = this.randomGenerator.ExecuteCloudContent(appDefaultStartDateTime, products, customers, counter);
+                                    var eventResponse = await this.odpService.CreateEvents(apiKey, contentEvents);
+                                    this.WriteErrors(eventResponse, $"Saved {counter} content events");
+                                    break;
 
-                            case "2":
-                                var contentCommerceEvents = this.randomGenerator.ExecuteCloudAndCloundContent(appDefaultStartDateTime, products, customers, counter);
-                                var commerceEventResponse = await this.odpService.CreateEvents(apiKey, contentCommerceEvents);
-                                this.WriteErrors(commerceEventResponse, $"Saving content & commerce events: {commerceEventResponse.Status} - {commerceEventResponse.Title}");
-                                break;
+                                case ProductType.ContentCommerce:
+                                    var contentCommerceEvents = this.randomGenerator.ExecuteCloudAndCloundContent(appDefaultStartDateTime, products, customers, counter);
+                                    var commerceEventResponse = await this.odpService.CreateEvents(apiKey, contentCommerceEvents);
+                                    this.WriteErrors(commerceEventResponse, $"Saved {counter} content & commerce events");
+                                    break;
+                            }
                         }
                     }
                 }
-                // Push Journey
-                if (journey > 0)
+                else
                 {
                     var customer = customers.FirstOrDefault();
                     await CreateJourneys(customer);
                 }
-
-                Console.WriteLine("Import Completed: Press any key to stop");
-                Console.ReadKey();
+                WriteWrappedHeader("Import Completed: It will take a bit of time for the items to show up in the interface but you could use GraphQL to query the data in realtime.", wrapperChar: ' ', ConsoleColor.Yellow); ;
             }
         }
 
@@ -165,7 +165,7 @@ namespace ODPContentRunner
         {
             if (!string.IsNullOrWhiteSpace(email))
             {
-                var foundCustomer = await this.odpService.GetCustomer(apiKey, email);
+                var foundCustomer = this.odpService.GetCustomer(apiKey, email);
                 if (foundCustomer != null)
                 {
                     customer = foundCustomer;
@@ -185,28 +185,28 @@ namespace ODPContentRunner
 
                     if (response.Status == 202)
                     {
-                        customer = await this.odpService.GetCustomer(apiKey, email);
+                        customer = this.odpService.GetCustomer(apiKey, email);
                     }
                 }
             }
-            if (customer != null)
+            if (customer.Attributes.Vuid.HasValue())
             {
                 var journeyEvents = new List<ODPGeneric>();
-                switch (journey)
+                switch (journeyType)
                 {
-                    case 1:
+                    case JourneyType.AssociationScript:
                         journeyEvents = this.journeyGenerator.GenerateAssociationCMSScript(customer, appDefaultStartDateTime);
                         break;
 
-                    case 2:
+                    case JourneyType.CMS:
                         journeyEvents = this.journeyGenerator.GenerateCMSScript(customer, appDefaultStartDateTime);
                         break;
 
-                    case 3:
+                    case JourneyType.CommerceMultiDay:
                         journeyEvents = this.journeyGenerator.GenerateCommerceMultiDayScript(customer, appDefaultStartDateTime);
                         break;
 
-                    case 4:
+                    case JourneyType.Commerce:
                         journeyEvents = this.journeyGenerator.GenerateCommerceScript(customer, appDefaultStartDateTime);
                         break;
                 }
@@ -236,16 +236,57 @@ namespace ODPContentRunner
         {
             if (response.Details != null && response.Details.Invalids.Any())
             {
-                var red = Console.ForegroundColor = ConsoleColor.Red;
                 foreach (var detail in response.Details.Invalids)
                 {
-                    Console.WriteLine(detail.ToString(), red);
+                    WriteColorLine(detail.ToString(), ConsoleColor.Red);
                 }
             }
             else if (!string.IsNullOrWhiteSpace(successMessage))
             {
-                Console.WriteLine(successMessage);
+                WriteColorLine(successMessage, ConsoleColor.Green);
             }
         }
+
+        #region Adding in color helpers
+
+        //https://weblog.west-wind.com/posts/2020/Jul/10/A-NET-Console-Color-Helper
+
+        public static void WriteColorLine(string text, ConsoleColor? color = null)
+        {
+            if (color.HasValue)
+            {
+                var oldColor = Console.ForegroundColor;
+                if (color == oldColor)
+                    Console.WriteLine(text);
+                else
+                {
+                    Console.ForegroundColor = color.Value;
+                    Console.WriteLine(text);
+                    Console.ForegroundColor = oldColor;
+                }
+            }
+            else
+                Console.WriteLine(text);
+        }
+
+        public static void WriteWrappedHeader(string headerText,
+                                       char wrapperChar = '-',
+                                       ConsoleColor headerColor = ConsoleColor.Yellow,
+                                       ConsoleColor dashColor = ConsoleColor.DarkGray)
+        {
+            if (string.IsNullOrEmpty(headerText))
+                return;
+
+            string line = new(wrapperChar, headerText.Length);
+
+            WriteColorLine(line, dashColor);
+            WriteColorLine(headerText, headerColor);
+            WriteColorLine(line, dashColor);
+        }
+
+        public static void WriteInfo(string text) =>
+            WriteColorLine(text, ConsoleColor.DarkCyan);
+
+        #endregion Adding in color helpers
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ODP.Services;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -12,6 +13,7 @@ namespace ODPContentRunner
 
         public static async Task Main(string[] args)
         {
+            Console.Clear();
             var services = ConfigureServices();
 
             var serviceProvider = services.BuildServiceProvider();

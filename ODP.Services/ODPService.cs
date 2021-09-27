@@ -2,7 +2,6 @@
 using ODP.Services.Models;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,14 +22,14 @@ namespace ODP.Services
             _restClient.AddDefaultHeader("Authorization", _options.Value.RestAuthToken);
         }
 
-        public async Task<Customer> GetCustomer(string apiKey, string email)
+        public Customer GetCustomer(string apiKey, string email)
         {
             var request = new RestRequest("/{apiVersion}/profiles", Method.GET)
                 .AddHeader("x-api-key", apiKey)
                 .AddUrlSegment("apiVersion", this._options.Value.RestBaseVersion)
                 .AddQueryParameter("email", email);
 
-            return await _restClient.GetAsync<Customer>(request);
+            return _restClient.Get<Customer>(request).Data;
         }
 
         public async Task<ODPResponse> CreateCustomers(string apiKey, List<Customer> data)

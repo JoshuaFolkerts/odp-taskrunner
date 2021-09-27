@@ -21,6 +21,6 @@ namespace ODP.Services.Models
         [NotMapped]
         [JsonIgnore]
         public bool IsValid =>
-            this.Status !=0 &&this.Status == 202;
+            this.Status != 0 && this.Status == 202;
     }
 }
