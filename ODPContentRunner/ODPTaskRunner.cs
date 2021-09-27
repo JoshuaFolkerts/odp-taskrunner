@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace ODPContentRunner
@@ -20,17 +21,19 @@ namespace ODPContentRunner
 
         private readonly IRandomGenerator randomGenerator;
 
-        private string apiKey = string.Empty;
-
-        private DateTime appDefaultStartDateTime = DateTime.Now.AddMonths(-1);
-
-        private string email = string.Empty;
-
         private JourneyType journeyType = 0;
 
         private ProductType productType = 0;
 
         private int counter = 1;
+
+        private string apiKey = string.Empty;
+
+        private string email = string.Empty;
+
+        private string odpPath = string.Empty;
+
+        private DateTime appDefaultStartDateTime = DateTime.Now.AddMonths(-1);
 
         public ODPTaskRunner(IODPService odpService, IContentGeneratorService contentGeneratorService, IJourneyGenerator journeyGenerator, IRandomGenerator randomGenerator)
         {
@@ -47,6 +50,8 @@ namespace ODPContentRunner
             apiKey = ReadLine.Read("Enter apiKey: ");
             Console.WriteLine();
 
+            odpPath = ReadLine.Read("Enter remote filePath - press enter for No: ");
+
             var dt = ReadLine.Read($"Enter Datetime - press enter for default ({appDefaultStartDateTime.ToShortDateString()}): ", appDefaultStartDateTime.ToShortDateString());
             DateTime userDateTime;
             while (!DateTime.TryParse(dt, out userDateTime) || userDateTime > DateTime.Now.AddDays(-2))
@@ -55,7 +60,10 @@ namespace ODPContentRunner
             }
             appDefaultStartDateTime = userDateTime;
             Console.WriteLine();
-
+            if (this.odpPath.HasValue())
+            {
+                this.ReadRemoteFile();
+            }
             WriteWrappedHeader("Product Type");
             for (int i = 0; i <= 2; i++)
             {
@@ -158,6 +166,18 @@ namespace ODPContentRunner
                     await CreateJourneys(customer);
                 }
                 WriteWrappedHeader("Import Completed: It will take a bit of time for the items to show up in the interface but you could use GraphQL to query the data in realtime.", wrapperChar: ' ', ConsoleColor.Yellow); ;
+            }
+        }
+
+        private async Task ReadRemoteFile()
+        {
+            using (var client = new WebClient())
+            {
+                var json = client.DownloadString(this.odpPath);
+                var genericObjects = JsonConvert.DeserializeObject<List<ODPGeneric>>(json);
+                var status = await this.odpService.CreateEvents(apiKey, genericObjects);
+                this.WriteErrors(status, "Events saved successfully");
+                Environment.Exit(0);
             }
         }
 
