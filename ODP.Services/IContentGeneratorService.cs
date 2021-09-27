@@ -7,7 +7,7 @@ namespace ODP.Services
 {
     public interface IContentGeneratorService
     {
-        Task<List<Customer>> GenerateCustomers(int count);
+        List<Customer> GenerateCustomers(int count);
 
         ODPGeneric GeneratePageViewEvent(Identifier identifiers, DateTime dateTime, string eventValue, Data data);
 

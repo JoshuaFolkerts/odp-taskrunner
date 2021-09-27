@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ODP.Services.Helpers
 {
-    public class DateTimeHelpers
+    public static class DateTimeHelpers
     {
         public static DateTime RandomDateTime(DateTime startDate, DateTime endDate)
         {

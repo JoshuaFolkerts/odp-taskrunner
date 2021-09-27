@@ -67,41 +67,48 @@ namespace ODPContentRunner
 
             if (productTypes != "0")
             {
-                Console.Write($"Number of events or customers to generate (1-200): ");
+                Console.Write($"Number of events or customers to generate (1-100): ");
                 counter = Convert.ToInt32(Console.ReadLine());
             }
 
-            Console.WriteLine("Journey Types:");
-            Console.WriteLine("0 - No Journey");
-            Console.WriteLine("1 - Association Script - CMS / Forms / Experiments / Email");
-            Console.WriteLine("2 - CMS / Search / Form / Experimentation / Email: ");
-            Console.WriteLine("3 - Commerce (multi-day) / Experiment / Form / Add To Cart / Triggered Email / In-store: ");
-            Console.WriteLine("4 - Commerce / Experiment / Form / Add To Cart / Triggered Email / Purchase: ");
-            Console.Write("Enter Journey Type: ");
-            var selectedJourney = Console.ReadLine();
-
-            if (!string.IsNullOrWhiteSpace(selectedJourney))
+            if (productTypes == "0")
             {
-                if (!int.TryParse(selectedJourney, out journey))
+                Console.WriteLine("Journey Types:");
+                Console.WriteLine("1 - Association Script - CMS / Forms / Experiments / Email");
+                Console.WriteLine("2 - CMS / Search / Form / Experimentation / Email: ");
+                Console.WriteLine("3 - Commerce (multi-day) / Experiment / Form / Add To Cart / Triggered Email / In-store: ");
+                Console.WriteLine("4 - Commerce / Experiment / Form / Add To Cart / Triggered Email / Purchase: ");
+                Console.Write("Enter Journey Type: ");
+                var selectedJourney = Console.ReadLine();
+
+                if (!string.IsNullOrWhiteSpace(selectedJourney))
                 {
-                    Console.WriteLine("Please select a value 0, 1, 2, 3, 4");
-                    Console.ReadLine();
+                    if (!int.TryParse(selectedJourney, out journey))
+                    {
+                        Console.WriteLine("Please select a value 0, 1, 2, 3, 4");
+                        Console.ReadLine();
+                    }
                 }
-            }
 
-            if (journey != 0)
-            {
-                Console.WriteLine($"Enter your email address (used for journey): ");
-                var enteredEmail = Console.ReadLine();
-                if (!string.IsNullOrWhiteSpace(enteredEmail))
+                if (journey != 0)
                 {
-                    email = enteredEmail;
+                    Console.WriteLine($"Enter your email address (used for journey): ");
+                    var enteredEmail = Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(enteredEmail))
+                    {
+                        email = enteredEmail;
+                    }
                 }
             }
             if (!string.IsNullOrEmpty(apiKey) && appDefaultStartDateTime < DateTime.Now && !string.IsNullOrWhiteSpace(productTypes))
             {
+                // force max 100
+                if (counter > 100)
+                {
+                    counter = 100;
+                }
                 // Get customers
-                var customers = await this.contentGeneratorService.GenerateCustomers(counter);
+                var customers = this.contentGeneratorService.GenerateCustomers(counter);
 
                 // Get products and randomize them
                 var products = JsonConvert.DeserializeObject<List<Product>>(await ReadJsonFile(Directory.GetCurrentDirectory() + @"\data\clothing-products.json"))

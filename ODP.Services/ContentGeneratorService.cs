@@ -11,7 +11,7 @@ namespace ODP.Services
 {
     public class ContentGeneratorService : IContentGeneratorService
     {
-        public async Task<List<Customer>> GenerateCustomers(int count)
+        public List<Customer> GenerateCustomers(int count)
         {
             var customers = new List<Customer>();
             // we need a random variable to select names randomly
@@ -68,7 +68,8 @@ namespace ODP.Services
         {
             var orderEvent = GenerateGenericEvent(identifiers, dateTime, "order", eventAction, new Data()
             {
-                Order = order
+                Order = order,
+                Page = "/checkout/confirm"
             });
             return orderEvent;
         }
